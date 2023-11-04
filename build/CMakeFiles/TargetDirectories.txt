@@ -1,0 +1,6 @@
+C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/CMakeFiles/dsp.dir
+C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/CMakeFiles/gui.dir
+C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/CMakeFiles/audiofile_lib.dir
+C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/CMakeFiles/zeromq_lib.dir
+C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/CMakeFiles/ZERO_CHECK.dir

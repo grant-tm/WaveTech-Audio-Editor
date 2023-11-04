@@ -1,0 +1,10 @@
+^C:\USERS\GRANT\DOCUMENTS\WAVETECH-AUDIO-EDITOR\BUILD\CMAKEFILES\0F6699A8905470C4E7FB1981218869A8\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Grant/Documents/WaveTech-Audio-Editor -BC:/Users/Grant/Documents/WaveTech-Audio-Editor/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Grant/Documents/WaveTech-Audio-Editor/build/WaveTech.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
