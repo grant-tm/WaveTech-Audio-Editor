@@ -1,4 +1,4 @@
-#include "../dependencies/AudioFile.h"
+#include "../dependencies/AudioFile/AudioFile.h"
 #include "../dependencies/cppzmq/zmq.hpp"
 #include <iostream>
 #include <stdlib.h>
