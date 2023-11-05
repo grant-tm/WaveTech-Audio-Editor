@@ -10,11 +10,8 @@ Load a local .wav file and perform the following operations:
 ## Dependencies
 ### [AudioFile](https://github.com/adamstark/AudioFile) by [AdamStark](https://github.com/adamstark)
 The AudioFile library is used to extract, edit, and save raw audio data to/from a .wav file.
-### [libzmq](https://github.com/zeromq/libzmq) by [ZeroMQ](https://github.com/zeromq)
-ZeroMQ is an asynchronous networking library, which is required for communication between WaveTech's GUI and signal processor. 
-The libzmq library is a C implementation powering (most of) ZeroMQ's language-specific bindings.
-### [cppzmq](https://github.com/zeromq/cppzmq) by [ZeroMQ](https://github.com/zeromq)
-The cppzmq library is a lightweight C++ binding of ZeroMQ.
+### [asio](https://think-async.com/Asio/) by [Christopher M. Kohlhoff](https://github.com/chriskohlhoff)
+Asio (Asynchronous I/O) is used for communication between WaveTech's GUI and signal processor.
 
 ## Build Instructions
 1. Clone this repository.
