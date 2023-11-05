@@ -1,7 +1,13 @@
-#include "../dependencies/AudioFile/AudioFile.h"
-#include "../dependencies/cppzmq/zmq.hpp"
+#include "..\dependencies\AudioFile\AudioFile.h"
 #include <iostream>
 #include <stdlib.h>
+
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0A00
+#endif
+#define ASIO_STANDALONE
+#include "..\dependencies\asio\include\asio.hpp"
+
 
 /* Naive approach to double audio length */
 AudioFile<float>::AudioBuffer* time_stretch (AudioFile<float>::AudioBuffer *buf){
@@ -10,7 +16,7 @@ AudioFile<float>::AudioBuffer* time_stretch (AudioFile<float>::AudioBuffer *buf)
 }
 
 int main(int argc, char** argv){
-    
+
     AudioFile<float> file;
     file.load("../wav_files/440Hz.wav");
     file.printSummary();
