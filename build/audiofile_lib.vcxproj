@@ -257,7 +257,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\Grant\Documents\WaveTech-Audio-Editor\dependencies\AudioFile.h" />
+    <ClInclude Include="C:\Users\Grant\Documents\WaveTech-Audio-Editor\dependencies\AudioFile\AudioFile.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\Grant\Documents\WaveTech-Audio-Editor\build\ZERO_CHECK.vcxproj">
