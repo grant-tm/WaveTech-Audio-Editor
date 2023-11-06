@@ -1,39 +1,47 @@
+/*=====================================================================================================================
+== Include Dependencies
+=====================================================================================================================*/
 #include "..\dependencies\AudioFile\AudioFile.h"
-#include <iostream>
-#include <stdlib.h>
 
+//define windows version for asio (suppresses annoying warning)
 #ifdef _WIN32
 #define _WIN32_WINNT 0x0A00
 #endif
+
+//using standalone version of asio (as opposed to boost::asio)
 #define ASIO_STANDALONE
 #include "..\dependencies\asio\include\asio.hpp"
 
+//defines protocols for sending and receiving audio through socket
+#include "communication_protocols.hpp"
 
-/* Naive approach to double audio length */
-AudioFile<float>::AudioBuffer* time_stretch (AudioFile<float>::AudioBuffer *buf){
-    
-    return buf;
-}
+/*=====================================================================================================================
+== Standard Libraries
+=====================================================================================================================*/
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
 
+/*=====================================================================================================================
+== Main
+=====================================================================================================================*/
 int main(int argc, char** argv){
 
-    AudioFile<float> file;
-    file.load("../wav_files/440Hz.wav");
-    file.printSummary();
+    /* initialize context and socket */
+    asio::io_context io_context;
+    std::shared_ptr<asio::ip::tcp::socket> socket_ptr(new asio::ip::tcp::socket(io_context));
+    
+    /* acceptor */
+    std::shared_ptr<asio::ip::tcp::acceptor> acceptor_ptr
+        (new asio::ip::tcp::acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 13)));
+    (*acceptor_ptr).accept(*socket_ptr);
 
-    AudioFile<float>::AudioBuffer buf;
-    buf.resize(2);
-    buf[0].resize(file.getNumSamplesPerChannel()*2);
-    buf[1].resize(file.getNumSamplesPerChannel()*2);
+    AudioFile<float>::AudioBuffer new_buffer; 
+    new_buffer.resize(2);
+    
+    recv_audio(socket_ptr, &new_buffer);
+    send_audio(socket_ptr, &new_buffer);
 
-    for(int i=0; i<file.getNumSamplesPerChannel()*2; i++){
-        buf[0][i] = file.samples[0][i%file.getNumSamplesPerChannel()];
-        buf[1][i] = file.samples[1][i%file.getNumSamplesPerChannel()];
-    }
-
-    file.setAudioBufferSize(2, file.getNumSamplesPerChannel()*2);
-    bool writeSuccess = file.setAudioBuffer(buf);
-    file.save("../Wav Files/result.wav", AudioFileFormat::Wave);
-
-    return 1;
+    return 0;
 }
