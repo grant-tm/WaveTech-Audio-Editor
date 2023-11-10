@@ -27,6 +27,42 @@
 #define CHUNK_SIZE 1024
 
 /*=====================================================================================================================
+== Send Message
+=====================================================================================================================*/
+bool send_message(std::shared_ptr<asio::ip::tcp::socket> socket, std::string message){
+    
+    //send message
+    asio::error_code ignored_error;
+    size_t write_size = asio::write(*socket, asio::buffer(message), ignored_error);
+
+    //return true if all characters were written
+    if(write_size < sizeof(message)){
+        return false;
+    }
+    return true;
+}
+
+/*=====================================================================================================================
+== Receive Message
+=====================================================================================================================*/
+unsigned int recv_message(std::shared_ptr<asio::ip::tcp::socket> socket, std::string* container){
+    
+    // read up to CHUNK_SIZE characters
+    std::string receiver;
+    receiver.resize(CHUNK_SIZE);
+    
+    // receive characters
+    size_t read_size = (*socket).read_some(asio::buffer(receiver));
+    
+    // copy message to container
+    *container = receiver;
+    
+    // return read size
+    unsigned int num_chars_received = static_cast<unsigned int>(read_size / sizeof(char));
+    return num_chars_received;
+}
+
+/*=====================================================================================================================
 == Send Audio Data
 =====================================================================================================================*/
 bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
@@ -35,7 +71,7 @@ bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
 
     asio::error_code ignored_error;
     std::vector<float> chunked_samples;
-    
+
     /* send left channel data */
     chunked_samples.resize(CHUNK_SIZE);
     unsigned int buffer_idx = 0;
@@ -61,15 +97,10 @@ bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
     }
     
     /* wait for confirmation */
-    std::string msg = "transfer confirmed";
-    while(1){
-        size_t read_size = (*socket).read_some(asio::buffer(msg));
-        if(msg == "TRANSFER CONFIRMED"){
-            break;
-        }
-    }
+    std::string msg;
+    recv_message(socket, &msg);
 
-    /* send left channel data */
+    /* send right channel data */
     chunked_samples.resize(CHUNK_SIZE);
     buffer_idx = 0;
     buffer_size = (*samples)[1].size();
@@ -122,8 +153,8 @@ void recv_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
     
     /* send confirmation */
     asio::error_code ignored_error;
-    std::string msg = "TRANSFER CONFIRMED";
-    size_t write_size = asio::write(*socket, asio::buffer(msg), ignored_error);
+    std::string msg = "CONFIRMED";
+    send_message(socket, msg);
 
     /* get right channel data */
     recv.resize(CHUNK_SIZE);
