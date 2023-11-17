@@ -1,9 +1,3 @@
-[submodule "dependencies/cppzmq"]
-	path = dependencies/cppzmq
-	url = https://github.com/zeromq/cppzmq.git
-[submodule "dependencies/libzmq"]
-	path = dependencies/libzmq
-	url = https://github.com/zeromq/libzmq.git
 [submodule "dependencies/AudioFile"]
 	path = dependencies/AudioFile
 	url = https://github.com/adamstark/AudioFile.git

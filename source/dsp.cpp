@@ -1,6 +1,6 @@
-/*=====================================================================================================================
-== Include Dependencies
-=====================================================================================================================*/
+//=================================================================================================
+// Include Dependencies
+//=================================================================================================
 #include "..\dependencies\AudioFile\AudioFile.h"
 
 //define windows version for asio (suppresses annoying warning)
@@ -15,81 +15,96 @@
 //defines protocols for sending and receiving audio through socket
 #include "communication_protocols.hpp"
 
-/*=====================================================================================================================
-== Standard Libraries
-=====================================================================================================================*/
+//=================================================================================================
+// Standard Libraries
+//=================================================================================================
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-/*=====================================================================================================================
-== Pitch Shift
-=====================================================================================================================*/
-void pitch_shift(std::shared_ptr<asio::ip::tcp::socket> socket){
+//=================================================================================================
+// Connect to reverse microservice
+//=================================================================================================
+void reverse(asio::io_context& io_context, AudioFile<float>::AudioBuffer* buf)
+{
+    // connect to reverse microservice
+    std::shared_ptr<asio::ip::tcp::socket> reverse_connection_socket(new asio::ip::tcp::socket(io_context));
+    asio::ip::tcp::resolver resolver(io_context);
+    asio::connect(*reverse_connection_socket, resolver.resolve("localhost", "8800"));
     
-}
-/*=====================================================================================================================
-== Time Stretch
-=====================================================================================================================*/
-void time_stretch(std::shared_ptr<asio::ip::tcp::socket> socket){
-
-}
-/*=====================================================================================================================
-== Reverse
-=====================================================================================================================*/
-void reverse(std::shared_ptr<asio::ip::tcp::socket> socket){
-    
-    AudioFile<float>::AudioBuffer buffer; 
-    buffer.resize(2);
-    
-    recv_audio(socket, &buffer);
-
-    //for each audio channel
-    for(int i=0; i<buffer.size(); i++){
-        size_t num_samples = buffer[i].size();
-        // for each sample in an audio channel
-        for(int j=0; j<(num_samples - j - 1); j++){
-            // swap two samples
-            float temp = buffer[i][j];
-            buffer[i][j] = buffer[i][num_samples - j - 1];
-            buffer[i][num_samples - j - 1] = temp;
-        }
+    // send run command and audio over port 8800
+    send_message(reverse_connection_socket, "run");
+    std::string receiver;
+    recv_message(reverse_connection_socket, &receiver);
+    if(receiver.compare("ready") == 0)
+    {
+        send_audio(reverse_connection_socket, buf);
     }
+    recv_message(reverse_connection_socket, &receiver);
+    
+    // receive response from reverse
+    send_message(reverse_connection_socket, "ready");
+    recv_audio(reverse_connection_socket, buf);
 
-    send_audio(socket, &buffer);
+    return;
 }
-/*=====================================================================================================================
-== Main
-=====================================================================================================================*/
-int main(int argc, char** argv){
 
-    // initialize context and socket
+//=================================================================================================
+// Main
+//=================================================================================================
+int main(int argc, char** argv)
+{
+    // receive connection from gui
     asio::io_context io_context;
-    std::shared_ptr<asio::ip::tcp::socket> socket_ptr(new asio::ip::tcp::socket(io_context));
-    
-    // acceptor
+    std::shared_ptr<asio::ip::tcp::socket> gui_connection_socket(new asio::ip::tcp::socket(io_context));
     std::shared_ptr<asio::ip::tcp::acceptor> acceptor_ptr
-        (new asio::ip::tcp::acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 13)));
-    (*acceptor_ptr).accept(*socket_ptr);
+        (new asio::ip::tcp::acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 5500)));
+    (*acceptor_ptr).accept(*gui_connection_socket);
 
-    while(1){
+    while(1)
+    {
+        std::cout << "waiting..." << std::endl;
+        
         std::string receiver;
-        recv_message(socket_ptr, &receiver);
+        recv_message(gui_connection_socket, &receiver);
+        std::cout << "Message received: " << receiver << std::endl;
+        if(receiver.compare(0, 5, "shift") == 0)
+        {
+            std::cout << "shift" << std::endl;
+        }
+        else if(receiver.compare(0, 6, "stretch") == 0)
+        {
+            std::cout << "stretch"<< std::endl;
+        }
+        else if(receiver.compare(0, 7, "reverse") == 0)
+        {
+            //create new audio buffer
+            AudioFile<float>::AudioBuffer buf;
+            buf.resize(2);
+            // receive audio from the gui
+            recv_audio(gui_connection_socket, &buf);
+            // send audio to reverse microservice
+            reverse(io_context, &buf);
+            // send reversed audio back to the gui
+            send_audio(gui_connection_socket, &buf);
+        }
+        else if(receiver.compare(0, 4, "exit") == 0){
+            std::cout << "Exiting..." << std::endl;
+            
+            // connect to reverse
+            std::shared_ptr<asio::ip::tcp::socket> reverse_connection_socket(new asio::ip::tcp::socket(io_context));
+            asio::ip::tcp::resolver resolver(io_context);
+            asio::connect(*reverse_connection_socket, resolver.resolve("localhost", "8800"));
+            
+            //send run command and audio over port 8800
+            send_message(reverse_connection_socket, "exit");
+            
+            // close connection
+            gui_connection_socket->shutdown(asio::ip::tcp::socket::shutdown_both);
+            gui_connection_socket->close();
 
-        if(receiver.compare("pitchshift") == 0){
-            pitch_shift(socket_ptr);
-        }
-        else if(receiver.compare("timestretch") == 0){
-            time_stretch(socket_ptr);
-        }
-        else if(receiver.compare("reverse") == 0){
-            reverse(socket_ptr);
-            return 0;
-        }
-        else if(receiver.compare("exit") == 0){
-            return 0;
+            return EXIT_SUCCESS;
         }
     }
-
-    return 0;
+    return EXIT_SUCCESS;
 }
