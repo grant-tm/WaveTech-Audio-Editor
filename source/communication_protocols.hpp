@@ -26,9 +26,9 @@
 //number of floats to write, so (CHUNK_SIZE * sizeof(float) is the number of bytes to write)
 #define CHUNK_SIZE 1024
 
-/*=====================================================================================================================
-== Send Message
-=====================================================================================================================*/
+//=================================================================================================
+// Send Message
+//=================================================================================================
 bool send_message(std::shared_ptr<asio::ip::tcp::socket> socket, std::string message){
     
     //send message
@@ -42,9 +42,9 @@ bool send_message(std::shared_ptr<asio::ip::tcp::socket> socket, std::string mes
     return true;
 }
 
-/*=====================================================================================================================
-== Receive Message
-=====================================================================================================================*/
+//=================================================================================================
+// Receive Message
+//=================================================================================================
 unsigned int recv_message(std::shared_ptr<asio::ip::tcp::socket> socket, std::string* container){
     
     // read up to CHUNK_SIZE characters
@@ -64,9 +64,9 @@ unsigned int recv_message(std::shared_ptr<asio::ip::tcp::socket> socket, std::st
     return num_chars_received;
 }
 
-/*=====================================================================================================================
-== Send Audio Data
-=====================================================================================================================*/
+//=================================================================================================
+// Send Audio Data
+//=================================================================================================
 bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
                 AudioFile<float>::AudioBuffer* samples){
 
@@ -78,12 +78,14 @@ bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
     chunked_samples.resize(CHUNK_SIZE);
     unsigned int buffer_idx = 0;
     size_t buffer_size = (*samples)[0].size();
+    bool write_done = false;
     while(1){
         // break samples into chunks
         for(unsigned int i=0; i<CHUNK_SIZE; i++){
             chunked_samples[i] = (*samples)[0][buffer_idx++];
             if(buffer_idx >= buffer_size){
                 chunked_samples.resize(buffer_idx % CHUNK_SIZE);
+                write_done = true;
                 break;
             }
         }
@@ -93,11 +95,12 @@ bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
         
         // break when less than a full chunk is used
         unsigned int num_samples_written = static_cast<unsigned int>(write_size/sizeof(float));
-        if(num_samples_written < CHUNK_SIZE){
+        if(write_done){
             break;
         }
     }
     
+
     // wait for confirmation
     std::string msg;
     recv_message(socket, &msg);
@@ -109,12 +112,14 @@ bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
     chunked_samples.resize(CHUNK_SIZE);
     buffer_idx = 0;
     buffer_size = (*samples)[1].size();
+    write_done = false;
     while(1){
         // break samples into chunks
         for(unsigned int i=0; i<CHUNK_SIZE; i++){
             chunked_samples[i] = (*samples)[1][buffer_idx++];
             if(buffer_idx >= buffer_size){
                 chunked_samples.resize(buffer_idx % CHUNK_SIZE);
+                write_done = true;
                 break;
             }
         }
@@ -123,19 +128,22 @@ bool send_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
         write_size = asio::write(*socket, asio::buffer(chunked_samples, write_size), ignored_error);
         // break when less than a full chunk is used
         unsigned int num_samples_written = static_cast<unsigned int>(write_size/sizeof(float));
-        if(num_samples_written < CHUNK_SIZE){
+        if(write_done){
             break;
         }
     }
-    
+
     return true;
 }
-/*=====================================================================================================================
-== Receive Audio Data
-=====================================================================================================================*/
+//=================================================================================================
+// Receive Audio Data
+//=================================================================================================
 void recv_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
                 AudioFile<float>::AudioBuffer* container){
     
+    (*container).clear();
+    (*container).resize(2);
+
     std::vector<float> recv;
     
     // get left channel data
@@ -144,6 +152,7 @@ void recv_audio(std::shared_ptr<asio::ip::tcp::socket> socket,
     while(1){
         size_t read_size = CHUNK_SIZE * sizeof(float);
         read_size = (*socket).read_some(asio::buffer(recv, read_size));
+        //std::cout << "read size: " << read_size << std::endl;
         unsigned int num_floats_read = static_cast<unsigned int>(read_size / sizeof(float));
         if((*container)[0].size() < ((*container)[0].size() + num_floats_read)){
             (*container)[0].resize((*container)[0].size() + num_floats_read);
