@@ -3,17 +3,8 @@
 //=================================================================================================
 #include "..\dependencies\AudioFile\AudioFile.h"
 
-//define windows version for asio (suppresses annoying warning)
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0A00
-#endif
-
-//using standalone version of asio (as opposed to boost::asio)
-#define ASIO_STANDALONE
-#include "..\dependencies\asio\include\asio.hpp"
-
-//defines protocols for sending and receiving audio through socket
-#include "communication_protocols.hpp"
+// objects for sending/receiving messages and audio data
+#include "Pipe.hpp"
 
 //=================================================================================================
 // Standard Libraries
