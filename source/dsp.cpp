@@ -27,6 +27,7 @@
 //=================================================================================================
 void reverse(asio::io_context& io_context, AudioFile<float>::AudioBuffer* buf)
 {
+    /*
     // connect to reverse microservice
     std::shared_ptr<asio::ip::tcp::socket> reverse_connection_socket(new asio::ip::tcp::socket(io_context));
     asio::ip::tcp::resolver resolver(io_context);
@@ -47,6 +48,7 @@ void reverse(asio::io_context& io_context, AudioFile<float>::AudioBuffer* buf)
     recv_audio(reverse_connection_socket, buf);
 
     return;
+    */
 }
 
 //=================================================================================================
@@ -54,6 +56,33 @@ void reverse(asio::io_context& io_context, AudioFile<float>::AudioBuffer* buf)
 //=================================================================================================
 int main(int argc, char** argv)
 {
+    // create a new pipe using port 5500
+    std::unique_ptr<DownstreamPipe> gui_pipe = std::make_unique<DownstreamPipe>(5500);
+    
+    // wait for connections
+    std::cout << "connecting..." << std::endl;
+    gui_pipe->connect(); 
+    std::cout << "connected!" << std::endl;
+
+    std::cout << "receiving message..." << std::endl;
+    std::cout << "Message received: " << gui_pipe->recv_message() << std::endl;
+
+    std::cout << "sending message..." << std::endl;
+    std::cout << gui_pipe->send_message("test successful") << std::endl;
+    std::cout << "message sent!" << std::endl;
+
+    std::cout << "receiving audio..." << std::endl;
+    std::shared_ptr<AudioFile<float>::AudioBuffer> buffer = gui_pipe->recv_audio();
+    
+    std::cout << "audio received! size: " << (*buffer)[0].size() << std::endl;
+    
+    std::cout << "disconnecting..." << std::endl;
+    gui_pipe->disconnect();
+    std::cout << "disconnected!" << std::endl;
+
+    return EXIT_SUCCESS;
+
+    /*
     // receive connection from gui
     asio::io_context io_context;
     std::shared_ptr<asio::ip::tcp::socket> gui_connection_socket(new asio::ip::tcp::socket(io_context));
@@ -106,5 +135,6 @@ int main(int argc, char** argv)
             return EXIT_SUCCESS;
         }
     }
+    */
     return EXIT_SUCCESS;
 }
