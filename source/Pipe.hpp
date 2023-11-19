@@ -1,5 +1,5 @@
-#ifndef _COMMUNICATION_PROTOCOLS
-#define _COMMUNICATION_PROTOCOLS
+#ifndef _PIPE
+#define _PIPE
 
 /*=====================================================================================================================
 == Include Dependencies

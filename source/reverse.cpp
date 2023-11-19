@@ -3,17 +3,8 @@
 =====================================================================================================================*/
 #include "..\dependencies\AudioFile\AudioFile.h"
 
-//define windows version for asio (suppresses annoying warning)
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0A00
-#endif
-
-//using standalone version of asio (as opposed to boost::asio)
-#define ASIO_STANDALONE
-#include "..\dependencies\asio\include\asio.hpp"
-
 //defines protocols for sending and receiving audio through socket
-#include "communication_protocols.hpp"
+#include "Pipe.hpp"
 
 /*=====================================================================================================================
 == Standard Libraries
@@ -41,7 +32,7 @@ AudioFile<float>::AudioBuffer* reverse(AudioFile<float>::AudioBuffer* buffer)
 =====================================================================================================================*/
 int main(int argc, char** argv)
 {
-
+    /*
     // initialize context and socket
     asio::io_context io_context;
     std::shared_ptr<asio::ip::tcp::socket> dsp_connection_socket(new asio::ip::tcp::socket(io_context));
@@ -93,4 +84,5 @@ int main(int argc, char** argv)
             return EXIT_SUCCESS;
         }
     }
+    */
 }
