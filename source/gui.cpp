@@ -61,20 +61,27 @@ void audio_effects_main_menu(Gui* gui)
 
 void audio_effects_reverse(Gui* gui)
 {
+    std::cout << "connecting to dsp microservice" << std::endl;
+    gui->connect();
+    std::cout << "connected to dsp microservice" << std::endl;
+    /*
     if(gui->get_file_loaded_status() == false)
     {
         std::cout << "Load a file to add effects." << std::endl;
         return;
     }
-
+    */
+    std::cout << "sending message to dsp service" << std::endl;
     gui->send_message("reverse");
-
+    std::cout << "message sent" << std::endl;
+    /*
     std::string alias = gui->get_filename_display_alias();
     if(alias.compare(alias.length()-1, 1, "*") != 0)
     {
         alias += "*";
     }
     gui->set_filename_display_alias(alias);
+    */
 }
 
 void audio_effects_stretch(Gui* gui)
@@ -172,5 +179,6 @@ int main(int argc, char** argv)
         gui->display();
         gui->execute();
     }
+    
     return EXIT_SUCCESS;
 }
