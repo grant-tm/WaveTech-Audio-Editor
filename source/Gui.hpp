@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <limits>
 //=================================================================================================
 // Menu Object
 //=================================================================================================
@@ -178,7 +179,7 @@ void Gui::add_menu(std::shared_ptr<Menu> new_menu)
 // display gui
 void Gui::display()
 {
-    //system("CLS");
+    system("CLS");
     print_header();
     menus[current_menu]->print();
 }
@@ -254,6 +255,10 @@ int Gui::get_int_from_user(int lowerbound, int upperbound)
 {
     int choice;
     std::cout << "Enter (" << lowerbound << "-" << upperbound << "): ";
+    
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');    
+
     std::cin >> choice;
     if(choice < lowerbound || choice > upperbound)
     {
@@ -266,6 +271,9 @@ int Gui::get_int_from_user(int lowerbound, int upperbound)
 // get input from the user
 std::string Gui::get_str_from_user()
 {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  
+    
     std::string user_input;
     std::cin >> user_input;
     return user_input;

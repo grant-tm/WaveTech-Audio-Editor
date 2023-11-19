@@ -16,6 +16,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <windows.h>
+#include <shellapi.h>
+
+char* cmdln;
+
+void startup(LPCSTR lpApplicationName)
+{
+    // additional information
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+
+    // set the size of the structures
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    // start the program up
+    CreateProcessA(
+        lpApplicationName,  // the path
+        NULL,               // Command line
+        NULL,               // Process handle not inheritable
+        NULL,               // Thread handle not inheritable
+        FALSE,              // Set handle inheritance to FALSE
+        CREATE_NEW_CONSOLE, // Opens file in a separate console
+        NULL,               // Use parent's environment block
+        NULL,               // Use parent's starting directory 
+        &si,                // Pointer to STARTUPINFO structure
+        &pi                 // Pointer to PROCESS_INFORMATION structure
+    );
+        // Close process and thread handles. 
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+}
 //=================================================================================================
 // Main Menu Functions
 //=================================================================================================
@@ -61,27 +94,26 @@ void audio_effects_main_menu(Gui* gui)
 
 void audio_effects_reverse(Gui* gui)
 {
-    std::cout << "connecting to dsp microservice" << std::endl;
-    gui->connect();
-    std::cout << "connected to dsp microservice" << std::endl;
-    /*
     if(gui->get_file_loaded_status() == false)
     {
-        std::cout << "Load a file to add effects." << std::endl;
         return;
     }
-    */
+    
     std::cout << "sending message to dsp service" << std::endl;
     gui->send_message("reverse");
     std::cout << "message sent" << std::endl;
-    /*
+
+    std::string str = gui->recv_message();
+    gui->send_audio();
+    gui->recv_audio();
+    
     std::string alias = gui->get_filename_display_alias();
     if(alias.compare(alias.length()-1, 1, "*") != 0)
     {
         alias += "*";
     }
+
     gui->set_filename_display_alias(alias);
-    */
 }
 
 void audio_effects_stretch(Gui* gui)
@@ -173,7 +205,13 @@ std::unique_ptr<Gui> create_wavetech_gui()
 int main(int argc, char** argv)
 {
     std::unique_ptr<Gui> gui = create_wavetech_gui();
-    gui->set_current_menu(0);
+    
+    std::cout << "connecting to dsp microservice" << std::endl;
+    gui->connect();
+    std::cout << "connected to dsp microservice" << std::endl;
+    
+    gui->set_current_menu(0); // main menu
+    
     while(!gui->get_exit_status())
     {
         gui->display();
