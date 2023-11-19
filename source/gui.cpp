@@ -17,6 +17,76 @@
 #include <stdlib.h>
 #include <vector>
 //=================================================================================================
+// Main Menu Functions
+//=================================================================================================
+void main_menu_exit_program(Gui* gui)
+{
+    gui->send_message("exit");
+    gui->set_exit_status(true);
+}
+
+void main_menu_file_options(Gui* gui)
+{
+    gui->set_current_menu(1);
+}
+
+void main_menu_audio_effects(Gui* gui)
+{
+    gui->set_current_menu(2);
+}
+//=================================================================================================
+// File Options Functions
+//=================================================================================================
+void file_options_main_menu(Gui* gui)
+{
+    gui->set_current_menu(0);
+}
+
+void file_options_load_file(Gui* gui)
+{
+    gui->load_audio_file();
+}
+
+void file_options_save_file(Gui* gui)
+{
+    gui->save_audio_file();
+}
+//=================================================================================================
+// Audio Effect Functions
+//=================================================================================================
+void audio_effects_main_menu(Gui* gui)
+{
+    gui->set_current_menu(0);
+}
+
+void audio_effects_reverse(Gui* gui)
+{
+    if(gui->get_file_loaded_status() == false)
+    {
+        std::cout << "Load a file to add effects." << std::endl;
+        return;
+    }
+
+    gui->send_message("reverse");
+
+    std::string alias = gui->get_filename_display_alias();
+    if(alias.compare(alias.length()-1, 1, "*") != 0)
+    {
+        alias += "*";
+    }
+    gui->set_filename_display_alias(alias);
+}
+
+void audio_effects_stretch(Gui* gui)
+{
+    gui->send_message("stretch");
+}
+
+void audio_effects_repitch(Gui* gui)
+{
+    gui->send_message("shift");
+}
+//=================================================================================================
 // Functions
 //=================================================================================================
 std::unique_ptr<Gui> create_wavetech_gui()
