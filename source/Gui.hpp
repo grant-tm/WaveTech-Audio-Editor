@@ -95,9 +95,9 @@ public:
     // communications
     void send_message(std::string);
     std::string recv_message();
-    
     void send_audio();
     void recv_audio();
+    void connect();
 
 protected:
     // gui state
@@ -141,7 +141,6 @@ Gui::Gui()
 
     // init pipe
     pipe = std::make_unique<UpstreamPipe>(5500);
-    pipe->connect();
 };
 
 // default constructor
@@ -162,7 +161,6 @@ Gui::Gui(Gui*)
 
     // init pipe
     pipe = std::make_unique<UpstreamPipe>(5500);
-    pipe->connect();
 };
 
 // set the gui header
@@ -180,7 +178,7 @@ void Gui::add_menu(std::shared_ptr<Menu> new_menu)
 // display gui
 void Gui::display()
 {
-    system("CLS");
+    //system("CLS");
     print_header();
     menus[current_menu]->print();
 }
@@ -188,7 +186,7 @@ void Gui::display()
 // get menu option choice and execute associated function
 void Gui::execute()
 {
-    int choice = get_int_from_user(0, menus[current_menu]->num_options);
+    int choice = get_int_from_user(0, menus[current_menu]->num_options - 1);
     menus[current_menu]->menu_functions[choice](this);
 }
 
@@ -353,73 +351,7 @@ void Gui::recv_audio()
     file.setAudioBuffer(*manipulated_audio);
 }
 
-//=================================================================================================
-// Main Menu Functions
-//=================================================================================================
-void main_menu_exit_program(Gui* gui)
+void Gui::connect()
 {
-    gui->send_message("exit");
-    gui->set_exit_status(true);
-}
-
-void main_menu_file_options(Gui* gui)
-{
-    gui->set_current_menu(1);
-}
-
-void main_menu_audio_effects(Gui* gui)
-{
-    gui->set_current_menu(2);
-}
-//=================================================================================================
-// File Options Functions
-//=================================================================================================
-void file_options_main_menu(Gui* gui)
-{
-    gui->set_current_menu(0);
-}
-
-void file_options_load_file(Gui* gui)
-{
-    gui->load_audio_file();
-}
-
-void file_options_save_file(Gui* gui)
-{
-    gui->save_audio_file();
-}
-//=================================================================================================
-// Audio Effect Functions
-//=================================================================================================
-void audio_effects_main_menu(Gui* gui)
-{
-    gui->set_current_menu(0);
-}
-
-void audio_effects_reverse(Gui* gui)
-{
-    if(gui->get_file_loaded_status() == false)
-    {
-        std::cout << "Load a file to add effects." << std::endl;
-        return;
-    }
-
-    gui->send_message("reverse");
-
-    std::string alias = gui->get_filename_display_alias();
-    if(alias.compare(alias.length()-1, 1, "*") != 0)
-    {
-        alias += "*";
-    }
-    gui->set_filename_display_alias(alias);
-}
-
-void audio_effects_stretch(Gui* gui)
-{
-    gui->send_message("stretch");
-}
-
-void audio_effects_repitch(Gui* gui)
-{
-    gui->send_message("shift");
+    pipe->connect();
 }
