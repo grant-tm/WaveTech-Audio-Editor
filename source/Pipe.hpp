@@ -39,6 +39,10 @@ public:
     // constructor
     Pipe();
     Pipe(int);
+    Pipe(int, std::shared_ptr<asio::io_context>);
+
+    // retrieve the io context
+    std::shared_ptr<asio::io_context> get_context();
 
     // manage connection
     virtual bool connect()=0; 
@@ -56,8 +60,7 @@ protected:
     int port;
     size_t chunk_size;
     bool connected;
-    std::unique_ptr<asio::ip::tcp::endpoint> endpoint;
-    std::unique_ptr<asio::io_context> context;
+    std::shared_ptr<asio::io_context> context;
     std::shared_ptr<asio::ip::tcp::socket> socket;
     std::unique_ptr<asio::error_code> error;
 };
@@ -73,9 +76,22 @@ Pipe::Pipe(int provided_port)
     port = provided_port;
     chunk_size = 1024;
     connected = false;
-    endpoint.reset(new asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
     context.reset(new asio::io_context());
     socket.reset(new asio::ip::tcp::socket(*context));
+}
+
+Pipe::Pipe(int provided_port, std::shared_ptr<asio::io_context> provided_context)
+{
+    port = provided_port;
+    chunk_size = 1024;
+    connected = false;
+    context = provided_context;
+    socket.reset(new asio::ip::tcp::socket(*context));
+}
+
+std::shared_ptr<asio::io_context> Pipe::get_context()
+{
+    return context;
 }
 
 //=================================================================================================
@@ -86,9 +102,17 @@ class UpstreamPipe : public Pipe
 public:
     // constructor
     UpstreamPipe(): Pipe{}{};
-    UpstreamPipe(int provided_port): Pipe{provided_port}
+    UpstreamPipe(int provided_port): 
+    Pipe{provided_port}
     {
         resolver.reset(new asio::ip::tcp::resolver(*context));
+        endpoint = resolver->resolve("localhost", std::to_string(provided_port));
+    }
+    UpstreamPipe(int provided_port, std::shared_ptr<asio::io_context> provided_context): 
+    Pipe{provided_port, provided_context}
+    {
+        resolver.reset(new asio::ip::tcp::resolver(*context));
+        endpoint = resolver->resolve("localhost", std::to_string(provided_port));
     }
     
     // manage connection
@@ -97,14 +121,13 @@ public:
 
 protected:
     std::unique_ptr<asio::ip::tcp::resolver> resolver;
+    asio::ip::tcp::resolver::results_type endpoint;
 };
 
 // client requests connection to server
 bool UpstreamPipe::connect()
 {
-    const std::string port_as_string = std::to_string(port);
-    asio::connect(*socket, (*resolver).resolve("localhost", "5500"));
-
+    asio::connect(*socket, endpoint);
     connected = true;
     return connected;
 }
@@ -126,6 +149,13 @@ public:
     DownstreamPipe(): Pipe{}{}
     DownstreamPipe(int provided_port): Pipe{provided_port}
     {
+        endpoint.reset(new asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+        acceptor.reset(new asio::ip::tcp::acceptor(*context, *endpoint));
+    }
+    DownstreamPipe(int provided_port, std::shared_ptr<asio::io_context> provided_context): 
+    Pipe{provided_port, provided_context}
+    {
+        endpoint.reset(new asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
         acceptor.reset(new asio::ip::tcp::acceptor(*context, *endpoint));
     }
 
@@ -134,6 +164,7 @@ public:
     bool disconnect();
 
 protected:
+    std::unique_ptr<asio::ip::tcp::endpoint> endpoint;
     std::shared_ptr<asio::ip::tcp::acceptor> acceptor;
 };
 
