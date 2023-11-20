@@ -29,4 +29,4 @@ The following lines can be used to send and receive string messages.
 - ```pipe_object->send_audio(AudioFile<float>::AudioBuffer*);```
 - ```AudioFile<float>::AudioBuffer* buf = pipe_object->recv_audio();```
 ### Send/Recv Interactions
-![Sequence Diagram](documentation/sequence_diagram.jpg)
+![Sequence Diagram](documentation/sequence_diagram.png)
